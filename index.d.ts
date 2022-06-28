@@ -1,4 +1,4 @@
 
-declare function filtersMixin(opts: any): any
+declare function filtersMixin(opts?: any): any
 
 export = filtersMixin
