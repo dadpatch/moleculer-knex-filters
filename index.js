@@ -1,6 +1,6 @@
 'use strict';
 
-import _ from 'lodash';
+const _ = require('lodash');
 const Validator = require("fastest-validator");
 const validator = new Validator({
 	useNewCustomCheckerFunction: true
