@@ -6,7 +6,7 @@ const validator = new Validator({
 	useNewCustomCheckerFunction: true
 });
 
-export default function (opts) {
+module.exports = function filtersMixin(opts = {}) {
 
   const parseFilterObj = (ctx) => {
     if (!ctx.params.filter) return ctx
