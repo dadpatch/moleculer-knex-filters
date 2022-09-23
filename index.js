@@ -20,7 +20,7 @@ module.exports = function filtersMixin(opts = {}) {
     }
 
     const translateToQuery = (obj) => {
-      const querySearch = [];
+      const query = [];
       Object.entries(obj).forEach(([key, value]) => {
         let field = ctx.service?.settings?.fields?.[key];
         if (typeof field === "string") field = validator.parseShortHand(field);
@@ -42,12 +42,12 @@ module.exports = function filtersMixin(opts = {}) {
           }
 
           if (Object.keys(querySearch).length && !field.virtual) {
-            querySearch.push(querySearch);
+            query.push(querySearch);
           }
         }
       });
 
-      return querySearch;
+      return query;
     };
 
     if (ctx.params.filter.$or) {
