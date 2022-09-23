@@ -51,7 +51,7 @@ module.exports = function filtersMixin(opts = {}) {
     };
 
     if (ctx.params.filter.$or) {
-      const orQuery = translateToQuery(orBindings);
+      const orQuery = translateToQuery(ctx.params.filter.$or);
       delete ctx.params.filter.$or;
       ctx.params.query.$or = ctx.params.query.$or || [];
       ctx.params.query.$or.push(...orQuery);
