@@ -1,97 +1,76 @@
-"use strict";
+'use strict';
 
-const _ = require("lodash");
-const Validator = require("fastest-validator");
+const _ = require('lodash');
+const Validator = require('fastest-validator');
 const validator = new Validator({
   useNewCustomCheckerFunction: true,
 });
 
 module.exports = function filtersMixin(opts = {}) {
-  const parseFilterObj = (ctx) => {
-    if (!ctx.params.filter) return ctx;
-    ctx.params.filter = ctx.params.filter || {};
-    ctx.params.query = ctx.params.query || {};
-
-    if (typeof ctx.params.filter === "string") {
-      ctx.params.filter = JSON.parse(ctx.params.filter);
-    }
-    if (typeof ctx.params.query === "string") {
-      ctx.params.query = JSON.parse(ctx.params.query);
-    }
-
-    const translateToQuery = (obj) => {
-      const query = [];
-      Object.entries(obj).forEach(([key, value]) => {
-        let field = ctx.service?.settings?.fields?.[key];
-        if (typeof field === "string") field = validator.parseShortHand(field);
-
-        if (field) {
-          const typeOfField = field.type;
-
-          let querySearch = {};
-          const columnName = field.columnName || key;
-          if (typeOfField === "string" && value && typeof value === "string") {
-            querySearch[key] = {
-              $raw: {
-                condition: `${_.snakeCase(columnName)} ilike ?`,
-                bindings: [`%${value}%`],
-              },
-            };
-          } else if (value || typeof value === "boolean") {
-            querySearch[key] = value;
-          }
-
-          if (Object.keys(querySearch).length && !field.virtual) {
-            query.push(querySearch);
-          }
-        }
-      });
-
-      return query;
-    };
-
-    if (ctx.params.filter.$or) {
-      const orQuery = translateToQuery(ctx.params.filter.$or);
-      delete ctx.params.filter.$or;
-      ctx.params.query.$or = ctx.params.query.$or || [];
-      ctx.params.query.$or.push(...orQuery);
-    }
-
-    const andQuery = translateToQuery(ctx.params.filter);
-    ctx.params.query.$and = ctx.params.query.$and || [];
-    ctx.params.query.$and.push(...andQuery);
-
-    return ctx;
-  };
-
-  const beforeHooks = {
-    list: parseFilterObj,
-    count: parseFilterObj,
-    find: parseFilterObj,
-  };
-
   const schema = {
     merged(schema) {
-      if (schema.hooks && schema.hooks.before) {
-        Object.keys(beforeHooks).forEach((hook) => {
-          const currentHooks = Array.isArray(beforeHooks[hook])
-            ? beforeHooks[hook]
-            : [beforeHooks[hook]];
-          if (schema.hooks.before[hook]) {
-            const previousHooks = Array.isArray(schema.hooks.before[hook])
-              ? schema.hooks.before[hook]
-              : [schema.hooks.before[hook]];
-            schema.hooks.before[hook] = [...previousHooks, ...currentHooks];
-          } else {
-            schema.hooks.before[hook] = currentHooks;
+      if (schema.methods.sanitizeParams) {
+        const superSanitizeParams = schema.methods.sanitizeParams;
+        schema.methods.sanitizeParams = function (params, opts) {
+          params = superSanitizeParams(params, opts);
+
+          if (!params.filter) return params;
+          params.filter = params.filter || {};
+          params.query = params.query || {};
+
+          if (typeof params.filter === 'string') {
+            params.filter = JSON.parse(params.filter);
           }
-        });
-      } else {
-        schema.hooks = schema.hooks || {};
-        schema.hooks.before = _.defaultsDeep(
-          schema.hooks.before || {},
-          beforeHooks
-        );
+
+          const translateToQuery = (obj) => {
+            const query = [];
+            Object.entries(obj).forEach(([key, value]) => {
+              let field = schema.settings?.fields?.[key];
+              if (typeof field === 'string')
+                field = validator.parseShortHand(field);
+
+              if (field) {
+                const typeOfField = field.type;
+
+                let querySearch = {};
+                const columnName = field.columnName || key;
+                if (
+                  typeOfField === 'string' &&
+                  value &&
+                  typeof value === 'string'
+                ) {
+                  querySearch[key] = {
+                    $raw: {
+                      condition: `${_.snakeCase(columnName)} ilike ?`,
+                      bindings: [`%${value}%`],
+                    },
+                  };
+                } else if (value || typeof value === 'boolean') {
+                  querySearch[key] = value;
+                }
+
+                if (Object.keys(querySearch).length && !field.virtual) {
+                  query.push(querySearch);
+                }
+              }
+            });
+
+            return query;
+          };
+
+          if (params.filter.$or) {
+            const orQuery = translateToQuery(params.filter.$or);
+            delete params.filter.$or;
+            params.query.$or = params.query.$or || [];
+            params.query.$or.push(...orQuery);
+          }
+
+          const andQuery = translateToQuery(params.filter);
+          params.query.$and = params.query.$and || [];
+          params.query.$and.push(...andQuery);
+
+          return params;
+        };
       }
     },
   };
