@@ -1,7 +1,7 @@
-'use strict';
+"use strict";
 
-const _ = require('lodash');
-const Validator = require('fastest-validator');
+const _ = require("lodash");
+const Validator = require("fastest-validator");
 const validator = new Validator({
   useNewCustomCheckerFunction: true,
 });
@@ -18,7 +18,7 @@ module.exports = function filtersMixin(opts = {}) {
           params.filter = params.filter || {};
           params.query = params.query || {};
 
-          if (typeof params.filter === 'string') {
+          if (typeof params.filter === "string") {
             params.filter = JSON.parse(params.filter);
           }
 
@@ -26,7 +26,7 @@ module.exports = function filtersMixin(opts = {}) {
             const query = [];
             Object.entries(obj).forEach(([key, value]) => {
               let field = schema.settings?.fields?.[key];
-              if (typeof field === 'string')
+              if (typeof field === "string")
                 field = validator.parseShortHand(field);
 
               if (field) {
@@ -34,10 +34,12 @@ module.exports = function filtersMixin(opts = {}) {
 
                 let querySearch = {};
                 const columnName = field.columnName || key;
-                if (
-                  typeOfField === 'string' &&
+                if (field.filterFn && typeof field.filterFn === "function") {
+                  querySearch[key] = field.filterFn(value);
+                } else if (
+                  typeOfField === "string" &&
                   value &&
-                  typeof value === 'string'
+                  typeof value === "string"
                 ) {
                   querySearch[key] = {
                     $raw: {
@@ -45,7 +47,7 @@ module.exports = function filtersMixin(opts = {}) {
                       bindings: [`%${value}%`],
                     },
                   };
-                } else if (value || typeof value === 'boolean') {
+                } else if (value || typeof value === "boolean") {
                   querySearch[key] = value;
                 }
 
