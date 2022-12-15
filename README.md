@@ -1,4 +1,4 @@
-**Auth Module BIIP Node.js SDK**
+**Knex filters for [@moleculer/database](https://github.com/moleculerjs/database)**
 
 # Table of Contents
 - [Instalation](#instalation)

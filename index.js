@@ -30,7 +30,13 @@ module.exports = function filtersMixin(opts = {}) {
 
           let querySearch = {};
           const columnName = field.columnName || key;
-          if (typeOfField === "string" && value && typeof value === "string") {
+          if (field.filterFn && typeof field.filterFn === "function") {
+            querySearch[key] = field.filterFn(value);
+          } else if (
+            typeOfField === "string" &&
+            value &&
+            typeof value === "string"
+          ) {
             querySearch[key] = {
               $raw: {
                 condition: `${_.snakeCase(columnName)} ilike ?`,
